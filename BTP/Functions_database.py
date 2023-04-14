@@ -1,6 +1,7 @@
 import BTP.Functions_parameters as parameters
 import pandas as pd
 import operator
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -28,6 +29,14 @@ param_functions = {
     'ShearModG': parameters.FShearG,
     'Tm': parameters.FTm,
     'Ec': parameters.Ec}
+
+conditions = {
+    'As-cast': "AS",
+    'Homogenized': "HM",
+    'Wrok Hardening': "WR",
+    'Powder Metallurgy':"PM",
+    'Additive manufacturing': "AM"
+}
 
 
 def table_compositions(compositions):
@@ -130,9 +139,17 @@ def create_input_database(alloys, conditions, hardness):
 
 
 def vh_to_uts(prediction):
-    factor = 3.353
-
+    factor = 1
     return round(float(prediction)*factor,2)
+
+def get_alloys():
+    cwd = os.getcwd()
+    file = pd.read_csv(cwd+"/BTP/database_for_tensorflow.csv")
+    alloys = list(file["Composition"])
+    return alloys
+
+def get_params():
+    return list(conditions.keys())
 
 def easy_prediction(alloy, condition, scaler, model, drop_params):
     """Insert two strings, one for the alloy and another for the condition
@@ -140,7 +157,7 @@ def easy_prediction(alloy, condition, scaler, model, drop_params):
     Possible conditions: AC, AM, HM, WR, PM
     Returns: prediction using tensorflow model
     """
-    inp = inputs_to_predict(alloy, condition, drop_params)
+    inp = inputs_to_predict(alloy, conditions[condition], drop_params)
     scaled = scaler.transform(inp)
     prediction = model.predict(scaled)
     return vh_to_uts(prediction)

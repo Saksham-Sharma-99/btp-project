@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
+from flask_cors import CORS, cross_origin
 from BTP import Functions_database as fd
 import tensorflow as tf
 
@@ -7,6 +8,8 @@ from pickle import load
 
 app = Flask(__name__)
 api = Api(app)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 class StrengthData(Resource):
     def get(self):
@@ -14,7 +17,7 @@ class StrengthData(Resource):
         loaded_model = tf.keras.models.load_model('BTP/saved_model/my_model')
 
         args = request.args
-        alloy = args.get("alloy")
+        alloy = args.get("alloy").replace(" ","")
         condition = args.get("condition")
         param1_to_drop = args.get("param1_to_drop")
         param2_to_drop = args.get("param2_to_drop")
@@ -26,9 +29,21 @@ class StrengthData(Resource):
 
         return {"data": f"{data} MPa"}
     
+class AlloyList(Resource):
+    def get(self):
+        alloys = fd.get_alloys()
+        return {"data" : alloys}
+
+class ParamKeys(Resource):
+    def get(self):
+        params = fd.get_params()
+        return {"data": params}
+    
 api.add_resource(StrengthData,"/strength_data")
+api.add_resource(AlloyList,"/alloys")
+api.add_resource(ParamKeys, "/params")
 
 if __name__ == "__main__":
     print(app)
     print(api.resources)
-    app.run(port=5000)
+    app.run(host='localhost', port=8000,debug=True)
