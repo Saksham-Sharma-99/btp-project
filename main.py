@@ -31,4 +31,4 @@ api.add_resource(StrengthData,"/strength_data")
 if __name__ == "__main__":
     print(app)
     print(api.resources)
-    app.run(port=3000)
+    app.run(port=5000)
